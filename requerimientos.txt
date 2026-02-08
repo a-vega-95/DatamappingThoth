@@ -1,0 +1,134 @@
+A continuación, te presento una estructura de solución completa que cubre tus tres requisitos:
+
+Mapa de directorios: Un archivo mapa_proyecto.txt con la estructura visual del árbol.
+
+Reporte de distribución: Un resumen de qué tipos de archivos existen (conteo por extensión).
+
+Código a PDF: Un archivo PDF consolidado con el contenido de los archivos legibles.
+
+1. Prerrequisitos
+Necesitarás instalar una librería para manejar la creación del PDF. Recomiendo FPDF por su simplicidad.
+
+Bash
+pip install fpdf
+2. El Código (Script en Python)
+Este script escanea recursivamente, filtra archivos binarios (para que no intente imprimir imágenes o ejecutables como texto) y genera los reportes.
+
+Python
+import os
+from fpdf import FPDF
+
+# CONFIGURACIÓN
+DIRECTORIO_RAIZ = "./tu_proyecto"  # Cambia esto a la ruta de tu proyecto
+NOMBRE_PDF = "Codigo_Fuente_Completo.pdf"
+NOMBRE_MAPA = "mapa_proyecto.txt"
+EXTENSIONES_IGNORADAS = {'.exe', '.dll', '.png', '.jpg', '.jpeg', '.pyc', '.git', '.zip', '.pdf'}
+CARPETAS_IGNORADAS = {'.git', '__pycache__', 'node_modules', 'venv', '.idea', '.vscode'}
+
+class PDFGenerator(FPDF):
+    def header(self):
+        self.set_font('Arial', 'B', 10)
+        self.cell(0, 10, 'Documentación de Código Fuente', 0, 1, 'C')
+
+    def chapter_title(self, title):
+        self.set_font('Arial', 'B', 12)
+        self.set_fill_color(200, 220, 255)
+        self.cell(0, 10, title, 0, 1, 'L', 1)
+        self.ln(4)
+
+    def chapter_body(self, body):
+        self.set_font('Courier', '', 8) # Courier es monoespaciada, ideal para código
+        self.multi_cell(0, 5, body)
+        self.ln()
+
+def es_archivo_texto(ruta_archivo):
+    """Intenta leer el archivo para ver si es texto o binario"""
+    try:
+        with open(ruta_archivo, 'r', encoding='utf-8') as f:
+            f.read(1024)
+        return True
+    except (UnicodeDecodeError, PermissionError):
+        return False
+
+def generar_arbol_y_extraer(ruta_raiz):
+    pdf = PDFGenerator()
+    pdf.add_page()
+    
+    estructura_arbol = []
+    conteo_formatos = {}
+    archivos_procesados = 0
+    
+    print(f"Iniciando escaneo en: {ruta_raiz}...\n")
+
+    for root, dirs, files in os.walk(ruta_raiz):
+        # Filtrar carpetas ignoradas
+        dirs[:] = [d for d in dirs if d not in CARPETAS_IGNORADAS]
+        
+        # Nivel de indentación para el mapa visual
+        level = root.replace(ruta_raiz, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        nombre_carpeta = os.path.basename(root)
+        if nombre_carpeta == '': nombre_carpeta = ruta_raiz
+        
+        estructura_arbol.append(f"{indent}[DIR] {nombre_carpeta}/")
+        subindent = ' ' * 4 * (level + 1)
+        
+        for f in files:
+            ruta_completa = os.path.join(root, f)
+            ext = os.path.splitext(f)[1].lower()
+            
+            # 1. Actualizar Mapa
+            estructura_arbol.append(f"{subindent}|-- {f}")
+            
+            # 2. Actualizar Estadísticas
+            conteo_formatos[ext] = conteo_formatos.get(ext, 0) + 1
+            
+            # 3. Procesar PDF (Solo si no está ignorado y es texto)
+            if ext not in EXTENSIONES_IGNORADAS and es_archivo_texto(ruta_completa):
+                try:
+                    with open(ruta_completa, 'r', encoding='utf-8', errors='replace') as codigo:
+                        contenido = codigo.read()
+                        
+                        # Agregar al PDF
+                        pdf.chapter_title(f"Archivo: {os.path.relpath(ruta_completa, ruta_raiz)}")
+                        pdf.chapter_body(contenido)
+                        archivos_procesados += 1
+                except Exception as e:
+                    print(f"Error leyendo {f}: {e}")
+
+    # GUARDAR MAPA TXT
+    with open(NOMBRE_MAPA, 'w', encoding='utf-8') as f:
+        f.write("=== ESTRUCTURA DE DIRECTORIOS ===\n\n")
+        f.write('\n'.join(estructura_arbol))
+        f.write("\n\n=== DISTRIBUCIÓN DE ARCHIVOS ===\n")
+        for ext, count in sorted(conteo_formatos.items()):
+            f.write(f"Formato {ext if ext else 'Sin ext'}: {count} archivos\n")
+            
+    # GUARDAR PDF
+    try:
+        pdf.output(NOMBRE_PDF)
+        print(f"\n¡Éxito! Procesados {archivos_procesados} archivos de código.")
+        print(f"Generados: {NOMBRE_PDF} y {NOMBRE_MAPA}")
+    except Exception as e:
+        print(f"Error guardando PDF (quizás está abierto?): {e}")
+
+if __name__ == "__main__":
+    # Puedes cambiar '.' por la ruta absoluta de la carpeta que quieres escanear
+    generar_arbol_y_extraer(DIRECTORIO_RAIZ)
+Características Clave de esta Solución:
+Detección de Binarios: La función es_archivo_texto es crítica. Evita que el programa se rompa intentando convertir un .png o un .exe a texto dentro del PDF.
+
+Fuente Monoespaciada: Utiliza la fuente Courier en el PDF. Esto es vital para que la indentación del código (Python, JS, C++, etc.) se mantenga legible.
+
+Codificación utf-8: El script maneja errors='replace', lo que significa que si encuentra un carácter extraño en un archivo de código, pondrá un símbolo de reemplazo en lugar de detener todo el proceso.
+
+Filtros de Seguridad: He incluido listas para ignorar carpetas como node_modules o .git, ya que suelen contener miles de archivos que harían el PDF inmanejable.
+
+¿Cómo usarlo?
+Copia el código en un archivo llamado extractor.py.
+
+Coloca el archivo en la carpeta raíz de tu proyecto (o edita la variable DIRECTORIO_RAIZ).
+
+Ejecútalo con python extractor.py.
+
+¿Te gustaría que agreguemos resaltado de sintaxis (colores) al PDF para que el código sea más fácil de leer, o prefieres mantenerlo en blanco y negro para impresión simple?

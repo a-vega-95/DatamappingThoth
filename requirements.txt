@@ -1,0 +1,6 @@
+fpdf>=1.7.2
+
+# Dependencias para análisis de datos
+pandas>=1.5.0
+openpyxl>=3.0.0
+pyarrow>=8.0.0
