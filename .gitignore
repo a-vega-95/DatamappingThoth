@@ -1,2 +1,21 @@
-# Ignorar la carpeta investigaciones y su contenido
+# Environment
+.venv/
+venv/
+env/
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# PyInstaller
+dist/
+build/
+*.spec
+
+# IDE
+.idea/
+.vscode/
+
+# Project specific
 investigaciones/

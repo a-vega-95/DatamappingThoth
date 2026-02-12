@@ -115,6 +115,13 @@ def generar_arbol_y_extraer(ruta_raiz, nombre_pdf="Codigo_Fuente_Completo.pdf",
     if not generar_mapa and not generar_pdf:
         return None
     
+    # 0. Normalizar rutas para evitar problemas de slash/backslash
+    ruta_raiz = os.path.normpath(os.path.abspath(ruta_raiz))
+    if carpeta_salida:
+        carpeta_salida = os.path.normpath(os.path.abspath(carpeta_salida))
+    else:
+        carpeta_salida = ruta_raiz
+
     pdf = None
     if generar_pdf:
         pdf = PDFGenerator()
@@ -144,7 +151,16 @@ def generar_arbol_y_extraer(ruta_raiz, nombre_pdf="Codigo_Fuente_Completo.pdf",
         dirs[:] = [d for d in dirs if d not in CARPETAS_IGNORADAS]
         
         # Nivel de indentación para el mapa visual
-        level = root.replace(ruta_raiz, '').count(os.sep)
+        # Usar os.path.relpath es más seguro que replace para rutas
+        try:
+            ruta_relativa_dir = os.path.relpath(root, ruta_raiz)
+            if ruta_relativa_dir == '.':
+                level = 0
+            else:
+                level = ruta_relativa_dir.count(os.sep) + 1
+        except ValueError:
+             level = 0 # Fallback si hay error con path
+        
         indent = '    ' * level
         nombre_carpeta = os.path.basename(root)
         if nombre_carpeta == '':
@@ -181,8 +197,8 @@ def generar_arbol_y_extraer(ruta_raiz, nombre_pdf="Codigo_Fuente_Completo.pdf",
                             contenido = codigo.read()
                             
                             # Agregar al PDF
-                            ruta_relativa = os.path.relpath(ruta_completa, ruta_raiz)
-                            pdf.chapter_title(f"Archivo: {ruta_relativa}")
+                            ruta_relativa_archivo = os.path.relpath(ruta_completa, ruta_raiz)
+                            pdf.chapter_title(f"Archivo: {ruta_relativa_archivo}")
                             pdf.chapter_body(contenido)
                             archivos_procesados += 1
                             
@@ -192,15 +208,16 @@ def generar_arbol_y_extraer(ruta_raiz, nombre_pdf="Codigo_Fuente_Completo.pdf",
                     except Exception as e:
                         log(f"Error leyendo {f}: {e}")
 
-    # Determinar ruta de salida
-    directorio_salida = carpeta_salida if carpeta_salida else ruta_raiz
-    
     # Crear carpeta de salida si no existe
-    if not os.path.exists(directorio_salida):
-        os.makedirs(directorio_salida)
+    if not os.path.exists(carpeta_salida):
+        try:
+            os.makedirs(carpeta_salida)
+        except OSError as e:
+            log(f"Error creando carpeta de salida: {e}")
+            return None
     
-    ruta_pdf = os.path.join(directorio_salida, nombre_pdf) if generar_pdf else None
-    ruta_mapa = os.path.join(directorio_salida, nombre_mapa.replace('.txt', '.pdf')) if generar_mapa else None
+    ruta_pdf = os.path.join(carpeta_salida, nombre_pdf) if generar_pdf else None
+    ruta_mapa = os.path.join(carpeta_salida, nombre_mapa.replace('.txt', '.pdf')) if generar_mapa else None
 
     # GUARDAR MAPA PDF
     if generar_mapa and ruta_mapa:
@@ -218,18 +235,29 @@ def generar_arbol_y_extraer(ruta_raiz, nombre_pdf="Codigo_Fuente_Completo.pdf",
                 pdf_mapa.linea(f"{ext if ext else 'Sin ext'}: {count} archivos")
             
             pdf_mapa.output(ruta_mapa)
-            log(f"Mapa guardado en: {ruta_mapa}")
+            if os.path.exists(ruta_mapa):
+                log(f"Mapa guardado en: {ruta_mapa}")
+            else:
+                log(f"Error: Mapa no se pudo guardar en {ruta_mapa}")
+
         except Exception as e:
             log(f"Error guardando mapa PDF: {e}")
     
     # GUARDAR PDF
     if generar_pdf and pdf is not None and ruta_pdf:
-        try:
-            pdf.output(ruta_pdf)
-            log(f"PDF guardado en: {ruta_pdf}")
-        except Exception as e:
-            log(f"Error guardando PDF (¿está abierto?): {e}")
-            return None
+        if archivos_procesados == 0:
+            log("AVISO: No se encontraron archivos de código compatibles para generar el PDF.")
+        else:
+            try:
+                pdf.output(ruta_pdf)
+                if os.path.exists(ruta_pdf):
+                    size_kb = os.path.getsize(ruta_pdf) / 1024
+                    log(f"PDF guardado en: {ruta_pdf} ({size_kb:.2f} KB)")
+                else:
+                    log(f"Error CRÍTICO: El archivo PDF no aparece en {ruta_pdf}")
+            except Exception as e:
+                log(f"Error guardando PDF (¿está abierto?): {e}")
+                return None
     
     resultado = {
         'archivos_procesados': archivos_procesados,
@@ -239,7 +267,11 @@ def generar_arbol_y_extraer(ruta_raiz, nombre_pdf="Codigo_Fuente_Completo.pdf",
         'ruta_mapa': ruta_mapa
     }
     
-    log(f"\n¡Éxito! Procesados {archivos_procesados} archivos de código.")
+    if archivos_procesados > 0:
+        log(f"\n¡Éxito! Procesados {archivos_procesados} archivos de código.")
+    else:
+        log("\nProceso finalizado. No se generó contenido para el PDF de código.")
+        
     return resultado
 
 

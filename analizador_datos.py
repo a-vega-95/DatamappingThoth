@@ -487,17 +487,19 @@ def _detectar_tipo_valor(valor) -> str:
     return 'texto'
 
 
-def generar_reporte_datos(ruta_directorio: str, archivo_salida: str = "mapa_datos.txt",
+def generar_reporte_datos(ruta_directorio: str, archivo_salida: str = "mapa_datos",
                           carpeta_salida: Optional[str] = None,
-                          callback: Optional[Callable] = None) -> Dict:
+                          callback: Optional[Callable] = None,
+                          formato: str = 'pdf') -> Dict:
     """
     Escanea directorio buscando archivos de datos y genera reporte.
     
     Args:
         ruta_directorio: Carpeta a escanear
-        archivo_salida: Nombre del archivo de reporte
+        archivo_salida: Nombre base del archivo de reporte
         carpeta_salida: Carpeta donde guardar el reporte (None = misma que ruta_directorio)
         callback: Función para reportar progreso
+        formato: Formato de salida ('pdf', 'txt', 'csv')
     
     Returns:
         Dict con resumen del análisis
@@ -511,6 +513,13 @@ def generar_reporte_datos(ruta_directorio: str, archivo_salida: str = "mapa_dato
             callback(msg)
         print(msg)
     
+    # 0. Normalizar rutas
+    ruta_directorio = os.path.normpath(os.path.abspath(ruta_directorio))
+    if carpeta_salida:
+        carpeta_salida = os.path.normpath(os.path.abspath(carpeta_salida))
+    else:
+        carpeta_salida = ruta_directorio
+
     log(f"Buscando archivos de datos en: {ruta_directorio}")
     
     # Buscar archivos
@@ -547,62 +556,36 @@ def generar_reporte_datos(ruta_directorio: str, archivo_salida: str = "mapa_dato
             log(f"Error analizando {nombre}: {e}")
             resultados.append({'ruta': ruta, 'error': str(e)})
     
-    # Generar reporte PDF
-    dir_salida = carpeta_salida if carpeta_salida else ruta_directorio
+    # Generar reporte según formato
     
     # Crear carpeta de salida si no existe
-    if not os.path.exists(dir_salida):
-        os.makedirs(dir_salida)
+    if not os.path.exists(carpeta_salida):
+        try:
+            os.makedirs(carpeta_salida)
+        except OSError as e:
+            log(f"Error creando carpeta de salida: {e}")
+            return {'error': str(e)}
     
-    # Cambiar extensión a .pdf
-    nombre_pdf = archivo_salida.replace('.txt', '.pdf')
-    ruta_salida = os.path.join(dir_salida, nombre_pdf)
+    ruta_salida = None
     
     try:
-        pdf = PDFDatos()
-        pdf.add_page()
-        
-        for res in resultados:
-            nombre = os.path.basename(res.get('ruta', 'N/A'))
-            pdf.archivo_header(nombre, res.get('tipo', 'Desconocido'), res.get('ruta', 'N/A'))
+        if formato.lower() == 'txt':
+            nombre_archivo = archivo_salida if archivo_salida.lower().endswith('.txt') else f"{archivo_salida.rsplit('.', 1)[0]}.txt"
+            ruta_salida = os.path.join(carpeta_salida, nombre_archivo)
+            _generar_reporte_txt(resultados, ruta_salida, log)
             
-            if 'error' in res:
-                pdf.error(res['error'])
-                pdf.ln(3)
-                continue
+        elif formato.lower() == 'csv':
+            nombre_archivo = archivo_salida if archivo_salida.lower().endswith('.csv') else f"{archivo_salida.rsplit('.', 1)[0]}.csv"
+            ruta_salida = os.path.join(carpeta_salida, nombre_archivo)
+            _generar_reporte_csv(resultados, ruta_salida, log)
             
-            tamaño = res.get('tamaño_bytes', 0)
-            pdf.info(f'Tamaño: {_formato_bytes(tamaño)}')
+        else: # Default PDF
+            nombre_archivo = archivo_salida if archivo_salida.lower().endswith('.pdf') else f"{archivo_salida.rsplit('.', 1)[0]}.pdf"
+            ruta_salida = os.path.join(carpeta_salida, nombre_archivo)
+            _generar_reporte_pdf(resultados, ruta_salida, log)
             
-            # Para Excel con múltiples hojas
-            if 'hojas' in res:
-                for hoja in res['hojas']:
-                    pdf.hoja_header(hoja['nombre'])
-                    fila_header = hoja.get('fila_encabezado', 1)
-                    if fila_header > 1:
-                        pdf.info(f'  Encabezados en fila: {fila_header} (detectado)')
-                    pdf.info(f'  Filas de datos: {hoja["total_filas"]:,}')
-                    pdf.info(f'  Columnas ({len(hoja["columnas"])}):') 
-                    _escribir_columnas_pdf(pdf, hoja)
-            else:
-                fila_header = res.get('fila_encabezado', 1)
-                if fila_header > 1:
-                    pdf.info(f'Encabezados en fila: {fila_header} (detectado)')
-                pdf.info(f'Filas de datos: {res.get("total_filas", 0):,}')
-                pdf.info(f'Columnas ({len(res.get("columnas", []))}):') 
-                _escribir_columnas_pdf(pdf, res)
-            
-            pdf.ln(3)
-        
-        # Resumen final
-        pdf.set_font('Arial', 'B', 10)
-        pdf.cell(0, 8, f'Total archivos analizados: {len(resultados)}', 0, 1)
-        
-        pdf.output(ruta_salida)
-        log(f"Reporte guardado en: {ruta_salida}")
-        
     except Exception as e:
-        log(f"Error generando PDF: {e}")
+        log(f"Error generando reporte {formato.upper()}: {e}")
         ruta_salida = None
     
     return {
@@ -610,6 +593,173 @@ def generar_reporte_datos(ruta_directorio: str, archivo_salida: str = "mapa_dato
         'ruta_reporte': ruta_salida,
         'resultados': resultados
     }
+
+
+def _generar_reporte_pdf(resultados: List[Dict], ruta_salida: str, log: Callable):
+    """Genera el reporte en formato PDF"""
+    pdf = PDFDatos()
+    pdf.add_page()
+    
+    for res in resultados:
+        nombre = os.path.basename(res.get('ruta', 'N/A'))
+        pdf.archivo_header(nombre, res.get('tipo', 'Desconocido'), res.get('ruta', 'N/A'))
+        
+        if 'error' in res:
+            pdf.error(res['error'])
+            pdf.ln(3)
+            continue
+        
+        tamaño = res.get('tamaño_bytes', 0)
+        pdf.info(f'Tamaño: {_formato_bytes(tamaño)}')
+        
+        # Para Excel con múltiples hojas
+        if 'hojas' in res:
+            for hoja in res['hojas']:
+                pdf.hoja_header(hoja['nombre'])
+                fila_header = hoja.get('fila_encabezado', 1)
+                fila_datos = fila_header + 1
+                pdf.info(f'  Encabezados en fila: {fila_header}')
+                pdf.info(f'  Datos comienzan en fila: {fila_datos}')
+                pdf.info(f'  Filas de datos: {hoja["total_filas"]:,}')
+                pdf.info(f'  Columnas ({len(hoja["columnas"])}):')
+                _escribir_columnas_pdf(pdf, hoja)
+        else:
+            fila_header = res.get('fila_encabezado', 1)
+            fila_datos = fila_header + 1
+            pdf.info(f'Encabezados en fila: {fila_header}')
+            pdf.info(f'Datos comienzan en fila: {fila_datos}')
+            pdf.info(f'Filas de datos: {res.get("total_filas", 0):,}')
+            pdf.info(f'Columnas ({len(res.get("columnas", []))}):')
+            _escribir_columnas_pdf(pdf, res)
+        
+        pdf.ln(3)
+    
+    # Resumen final
+    pdf.set_font('Arial', 'B', 10)
+    pdf.cell(0, 8, f'Total archivos analizados: {len(resultados)}', 0, 1)
+    
+    pdf.output(ruta_salida)
+    
+    if os.path.exists(ruta_salida):
+            log(f"Reporte PDF guardado en: {ruta_salida}")
+    else:
+            log(f"Error CRÍTICO: El reporte no aparece en {ruta_salida}")
+
+
+def _generar_reporte_txt(resultados: List[Dict], ruta_salida: str, log: Callable):
+    """Genera el reporte en formato TXT"""
+    with open(ruta_salida, 'w', encoding='utf-8') as f:
+        f.write("MAPA DE ARCHIVOS DE DATOS\n")
+        f.write("=========================\n\n")
+        
+        for res in resultados:
+            nombre = os.path.basename(res.get('ruta', 'N/A'))
+            tipo = res.get('tipo', 'Desconocido')
+            ruta = res.get('ruta', 'N/A')
+            
+            f.write(f"ARCHIVO: {nombre}\n")
+            f.write(f"Tipo: {tipo}\n")
+            f.write(f"Ruta: {ruta}\n")
+            
+            if 'error' in res:
+                f.write(f"ERROR: {res['error']}\n\n")
+                continue
+            
+            tamaño = res.get('tamaño_bytes', 0)
+            f.write(f"Tamaño: {_formato_bytes(tamaño)}\n")
+            
+            if 'hojas' in res:
+                for hoja in res['hojas']:
+                    f.write(f"\n  HOJA: {hoja['nombre']}\n")
+                    f.write(f"  Encabezados en fila: {hoja.get('fila_encabezado', 1)}\n")
+                    f.write(f"  Filas de datos: {hoja.get('total_filas', 0):,}\n")
+                    f.write(f"  Columnas ({len(hoja.get('columnas', []))}):\n")
+                    _escribir_columnas(f, hoja, indent="    ")
+            else:
+                f.write(f"Encabezados en fila: {res.get('fila_encabezado', 1)}\n")
+                f.write(f"Filas de datos: {res.get('total_filas', 0):,}\n")
+                f.write(f"Columnas ({len(res.get('columnas', []))}):\n")
+                _escribir_columnas(f, res)
+            
+            f.write("\n" + "-"*50 + "\n\n")
+            
+        f.write(f"Total archivos analizados: {len(resultados)}\n")
+        
+    if os.path.exists(ruta_salida):
+        log(f"Reporte TXT guardado en: {ruta_salida}")
+    else:
+        log(f"Error CRÍTICO: El reporte no aparece en {ruta_salida}")
+
+
+def _generar_reporte_csv(resultados: List[Dict], ruta_salida: str, log: Callable):
+    """Genera el reporte en formato CSV (Flat format)"""
+    import csv
+    
+    # Definir columnas del reporte CSV
+    fieldnames = [
+        'archivo_nombre', 'archivo_ruta', 'archivo_tipo', 'archivo_tamaño', 
+        'hoja_nombre', 'total_filas', 'total_columnas', 
+        'columna_nombre', 'columna_tipo_detectado', 'ejemplo_valores', 'error'
+    ]
+    
+    with open(ruta_salida, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        
+        for res in resultados:
+            base_info = {
+                'archivo_nombre': os.path.basename(res.get('ruta', 'N/A')),
+                'archivo_ruta': res.get('ruta', 'N/A'),
+                'archivo_tipo': res.get('tipo', 'Desconocido'),
+                'archivo_tamaño': _formato_bytes(res.get('tamaño_bytes', 0)),
+                'error': res.get('error', '')
+            }
+            
+            if 'error' in res:
+                writer.writerow(base_info)
+                continue
+            
+            # Helper para escribir columnas
+            def escribir_cols(columns_data, hoja_nom=''):
+                columnas = columns_data.get('columnas', [])
+                tipos = columns_data.get('tipos_detectados', {})
+                muestras = columns_data.get('muestra_valores', {})
+                
+                if not columnas:
+                    row = base_info.copy()
+                    row.update({
+                        'hoja_nombre': hoja_nom,
+                        'total_filas': columns_data.get('total_filas', 0),
+                        'total_columnas': 0
+                    })
+                    writer.writerow(row)
+                    return
+
+                for col in columnas:
+                    row = base_info.copy()
+                    muestra = muestras.get(col, [])
+                    muestra_str = "; ".join(muestra[:5]) # Separador interno ;
+                    
+                    row.update({
+                        'hoja_nombre': hoja_nom,
+                        'total_filas': columns_data.get('total_filas', 0),
+                        'total_columnas': len(columnas),
+                        'columna_nombre': col,
+                        'columna_tipo_detectado': tipos.get(col, 'texto'),
+                        'ejemplo_valores': muestra_str
+                    })
+                    writer.writerow(row)
+            
+            if 'hojas' in res:
+                for hoja in res['hojas']:
+                    escribir_cols(hoja, hoja['nombre'])
+            else:
+                escribir_cols(res)
+
+    if os.path.exists(ruta_salida):
+        log(f"Reporte CSV guardado en: {ruta_salida}")
+    else:
+        log(f"Error CRÍTICO: El reporte no aparece en {ruta_salida}")
 
 
 def _escribir_columnas_pdf(pdf, datos: Dict):

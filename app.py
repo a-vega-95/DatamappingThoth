@@ -154,6 +154,17 @@ class InvestigadorApp:
                               font=('Segoe UI', 8), foreground='gray')
         datos_info.pack(anchor=tk.W, padx=(20, 0))
         
+        # Selector de formato para datos
+        formato_frame = ttk.Frame(datos_frame)
+        formato_frame.pack(fill=tk.X, padx=(20, 0), pady=(5, 0))
+        
+        ttk.Label(formato_frame, text="Formato de salida:", font=('Segoe UI', 9)).pack(side=tk.LEFT)
+        
+        self.formato_datos_var = tk.StringVar(value="PDF")
+        combo_formato = ttk.Combobox(formato_frame, textvariable=self.formato_datos_var, 
+                                     values=["PDF", "TXT", "CSV"], state="readonly", width=10)
+        combo_formato.pack(side=tk.LEFT, padx=(5, 0))
+        
         # Botón principal
         self.btn_generar = ttk.Button(main_frame, text="🚀 Generar Documentación",
                                       style='Big.TButton', command=self.iniciar_proceso)
@@ -256,6 +267,7 @@ class InvestigadorApp:
         generar_pdf = self.generar_pdf_var.get()
         solo_codigo = self.solo_codigo_var.get()
         generar_mapa_datos = self.generar_mapa_datos_var.get()
+        formato_datos = self.formato_datos_var.get()
         
         # Determinar carpeta de salida
         if self.usar_misma_carpeta_var.get():
@@ -288,12 +300,13 @@ class InvestigadorApp:
             
             # Generar mapa de archivos de datos
             if generar_mapa_datos:
-                self.root.after(0, lambda: self.log("\n📊 Iniciando análisis de archivos de datos..."))
+                self.root.after(0, lambda: self.log(f"\n📊 Iniciando análisis de archivos de datos (Salida: {formato_datos})..."))
                 resultado_datos = generar_reporte_datos(
                     directorio,
-                    archivo_salida="mapa_datos.txt",
+                    archivo_salida=f"mapa_datos",
                     carpeta_salida=carpeta_salida,
-                    callback=callback_log
+                    callback=callback_log,
+                    formato=formato_datos
                 )
             
             # Mostrar resultados
