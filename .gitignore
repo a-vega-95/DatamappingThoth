@@ -8,10 +8,7 @@ env/
 __pycache__/
 *.pyc
 
-# PyInstaller
-dist/
-build/
-*.spec
+
 
 # IDE
 .idea/
