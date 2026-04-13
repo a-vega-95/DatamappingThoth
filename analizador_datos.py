@@ -9,6 +9,7 @@ import os
 import re
 from typing import Dict, List, Optional, Callable, Tuple
 from fpdf import FPDF
+from utils import compress_pdf
 
 # Tamaño de chunk para lectura eficiente
 CHUNK_SIZE = 10000  # filas por chunk
@@ -641,7 +642,9 @@ def _generar_reporte_pdf(resultados: List[Dict], ruta_salida: str, log: Callable
     pdf.output(ruta_salida)
     
     if os.path.exists(ruta_salida):
-            log(f"Reporte PDF guardado en: {ruta_salida}")
+            # Comprimir reporte final
+            ruta_salida = compress_pdf(ruta_salida, callback=log)
+            log(f"Reporte PDF finalizado y comprimido en: {ruta_salida}")
     else:
             log(f"Error CRÍTICO: El reporte no aparece en {ruta_salida}")
 

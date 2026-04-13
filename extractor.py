@@ -5,6 +5,7 @@ Genera: mapa de directorios, reporte de distribución y PDF consolidado
 
 import os
 from fpdf import FPDF
+from utils import compress_pdf
 
 # CONFIGURACIÓN POR DEFECTO
 EXTENSIONES_IGNORADAS = {'.exe', '.dll', '.png', '.jpg', '.jpeg', '.pyc', '.git', '.zip', '.pdf', '.ico', '.gif', '.bmp', '.mp3', '.mp4', '.avi', '.mov', '.db', '.sqlite'}
@@ -236,6 +237,8 @@ def generar_arbol_y_extraer(ruta_raiz, nombre_pdf="Codigo_Fuente_Completo.pdf",
             
             pdf_mapa.output(ruta_mapa)
             if os.path.exists(ruta_mapa):
+                # Comprimir mapa también
+                ruta_mapa = compress_pdf(ruta_mapa, callback=log)
                 log(f"Mapa guardado en: {ruta_mapa}")
             else:
                 log(f"Error: Mapa no se pudo guardar en {ruta_mapa}")
@@ -251,12 +254,15 @@ def generar_arbol_y_extraer(ruta_raiz, nombre_pdf="Codigo_Fuente_Completo.pdf",
             try:
                 pdf.output(ruta_pdf)
                 if os.path.exists(ruta_pdf):
+                    # Comprimir el PDF después de generarlo
+                    ruta_pdf = compress_pdf(ruta_pdf, callback=log)
+                    
                     size_kb = os.path.getsize(ruta_pdf) / 1024
-                    log(f"PDF guardado en: {ruta_pdf} ({size_kb:.2f} KB)")
+                    log(f"PDF final guardado en: {ruta_pdf} ({size_kb:.2f} KB)")
                 else:
                     log(f"Error CRÍTICO: El archivo PDF no aparece en {ruta_pdf}")
             except Exception as e:
-                log(f"Error guardando PDF (¿está abierto?): {e}")
+                log(f"Error guardando o comprimiendo PDF (¿está abierto?): {e}")
                 return None
     
     resultado = {

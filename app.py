@@ -10,6 +10,7 @@ import os
 
 from extractor import generar_arbol_y_extraer, EXTENSIONES_CODIGO
 from analizador_datos import generar_reporte_datos
+from conversor import convertir_archivo
 
 
 class InvestigadorApp:
@@ -25,11 +26,26 @@ class InvestigadorApp:
         self.style.configure('Subtitle.TLabel', font=('Segoe UI', 10))
         self.style.configure('Big.TButton', font=('Segoe UI', 11), padding=10)
         
-        self.crear_widgets()
+        self.crear_tabs()
         
-    def crear_widgets(self):
+    def crear_tabs(self):
+        # Crear Notebook para pestañas
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
+        
+        # Tab 1: Investigador
+        self.tab_investigador = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab_investigador, text="🔍 Investigador")
+        self.crear_widgets_investigador(self.tab_investigador)
+        
+        # Tab 2: Conversor
+        self.tab_conversor = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab_conversor, text="🔄 Conversor")
+        self.crear_widgets_conversor(self.tab_conversor)
+
+    def crear_widgets_investigador(self, parent):
         # Frame principal con padding
-        main_frame = ttk.Frame(self.root, padding="20")
+        main_frame = ttk.Frame(parent, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Título
@@ -189,6 +205,163 @@ class InvestigadorApp:
         
         self.stats_label = ttk.Label(self.stats_frame, text="Esperando ejecución...")
         self.stats_label.pack()
+
+    def crear_widgets_conversor(self, parent):
+        """Crea la interfaz para el módulo de conversión de archivos"""
+        main_frame = ttk.Frame(parent, padding="20")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Título
+        titulo = ttk.Label(main_frame, text="Conversor de Formatos", 
+                          style='Title.TLabel')
+        titulo.pack(pady=(0, 5))
+        
+        subtitulo = ttk.Label(main_frame, 
+                             text="Cambia el formato de tus archivos de forma eficiente",
+                             style='Subtitle.TLabel')
+        subtitulo.pack(pady=(0, 20))
+        
+        # Frame para selección de archivo de origen
+        archivo_frame = ttk.LabelFrame(main_frame, text="Archivo de Origen", padding="10")
+        archivo_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        self.archivo_origen_var = tk.StringVar()
+        
+        entry_frame = ttk.Frame(archivo_frame)
+        entry_frame.pack(fill=tk.X)
+        
+        self.archivo_entry = ttk.Entry(entry_frame, textvariable=self.archivo_origen_var, 
+                                       font=('Segoe UI', 10))
+        self.archivo_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+        
+        btn_buscar = ttk.Button(entry_frame, text="📄 Seleccionar...", 
+                               command=self.seleccionar_archivo_origen)
+        btn_buscar.pack(side=tk.RIGHT)
+        
+        # Frame para opciones de conversión
+        conv_opciones_frame = ttk.LabelFrame(main_frame, text="Configuración de Salida", padding="10")
+        conv_opciones_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Formato destino
+        formato_frame = ttk.Frame(conv_opciones_frame)
+        formato_frame.pack(fill=tk.X, pady=5)
+        
+        ttk.Label(formato_frame, text="Convertir a:", width=15).pack(side=tk.LEFT)
+        self.formato_destino_var = tk.StringVar()
+        self.combo_destino = ttk.Combobox(formato_frame, textvariable=self.formato_destino_var, 
+                                          state="readonly", font=('Segoe UI', 10))
+        self.combo_destino.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.combo_destino['values'] = ("Selecciona un archivo primero...")
+        
+        # Carpeta destino
+        destino_f_frame = ttk.Frame(conv_opciones_frame)
+        destino_f_frame.pack(fill=tk.X, pady=5)
+        
+        ttk.Label(destino_f_frame, text="Carpeta salida:", width=15).pack(side=tk.LEFT)
+        self.carpeta_conv_var = tk.StringVar()
+        ttk.Entry(destino_f_frame, textvariable=self.carpeta_conv_var, 
+                  font=('Segoe UI', 10)).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+        
+        ttk.Button(destino_f_frame, text="📁 ...", 
+                   command=self.seleccionar_carpeta_conv).pack(side=tk.RIGHT)
+        
+        # Mensaje de eficiencia
+        info_memo = ttk.Label(main_frame, 
+                             text="ℹ️ Procesamiento por trozos (chunks) activado para archivos grandes.",
+                             font=('Segoe UI', 8, 'italic'), foreground='blue')
+        info_memo.pack(pady=(0, 10))
+        
+        # Botón convertir
+        self.btn_convertir = ttk.Button(main_frame, text="🔄 Iniciar Conversión",
+                                        style='Big.TButton', command=self.iniciar_conversion)
+        self.btn_convertir.pack(pady=15)
+        
+        # Barra de progreso
+        self.progreso_conv = ttk.Progressbar(main_frame, mode='indeterminate')
+        self.progreso_conv.pack(fill=tk.X, pady=(0, 10))
+        
+        # Log del conversor
+        conv_log_frame = ttk.LabelFrame(main_frame, text="Registro de Conversión", padding="10")
+        conv_log_frame.pack(fill=tk.BOTH, expand=True)
+        
+        self.conv_log_text = scrolledtext.ScrolledText(conv_log_frame, height=8, 
+                                                       font=('Consolas', 9),
+                                                       state=tk.DISABLED)
+        self.conv_log_text.pack(fill=tk.BOTH, expand=True)
+
+    def seleccionar_archivo_origen(self):
+        archivo = filedialog.askopenfilename(title="Selecciona el archivo a convertir")
+        if archivo:
+            self.archivo_origen_var.set(archivo)
+            ext = os.path.splitext(archivo)[1].lower()
+            self.carpeta_conv_var.set(os.path.dirname(archivo))
+            
+            # Actualizar opciones de destino según origen
+            opciones = []
+            if ext == '.csv': opciones = ['XLSX', 'JSON']
+            elif ext in ('.xlsx', '.xls'): opciones = ['CSV', 'JSON']
+            elif ext == '.json': opciones = ['CSV', 'XLSX']
+            elif ext in ('.png', '.jpg', '.jpeg'): opciones = ['PDF']
+            elif ext == '.txt': opciones = ['PDF']
+            
+            if opciones:
+                self.combo_destino['values'] = opciones
+                self.combo_destino.current(0)
+            else:
+                self.combo_destino['values'] = ["Formato no soportado"]
+                self.combo_destino.set("Formato no soportado")
+
+    def seleccionar_carpeta_conv(self):
+        carpeta = filedialog.askdirectory(title="Selecciona carpeta de salida")
+        if carpeta:
+            self.carpeta_conv_var.set(carpeta)
+
+    def log_conv(self, mensaje):
+        self.conv_log_text.config(state=tk.NORMAL)
+        self.conv_log_text.insert(tk.END, mensaje + "\n")
+        self.conv_log_text.see(tk.END)
+        self.conv_log_text.config(state=tk.DISABLED)
+
+    def iniciar_conversion(self):
+        archivo = self.archivo_origen_var.get()
+        formato = self.formato_destino_var.get()
+        carpeta = self.carpeta_conv_var.get()
+        
+        if not archivo or not formato or not carpeta or "Selecciona" in formato:
+            messagebox.showwarning("Aviso", "Por favor completa todos los campos.")
+            return
+            
+        self.btn_convertir.config(state=tk.DISABLED)
+        self.progreso_conv.start(10)
+        self.conv_log_text.config(state=tk.NORMAL)
+        self.conv_log_text.delete(1.0, tk.END)
+        self.conv_log_text.config(state=tk.DISABLED)
+        
+        thread = threading.Thread(target=self.ejecutar_conversion, daemon=True)
+        thread.start()
+
+    def ejecutar_conversion(self):
+        archivo = self.archivo_origen_var.get()
+        formato = self.formato_destino_var.get()
+        carpeta = self.carpeta_conv_var.get()
+        
+        def callback(msg):
+            self.root.after(0, lambda: self.log_conv(msg))
+            
+        try:
+            ruta_final = convertir_archivo(archivo, formato, carpeta, callback)
+            self.root.after(0, lambda: self.log_conv(f"\n✨ Conversión completada con éxito."))
+            self.root.after(0, lambda: self.log_conv(f"📁 Archivo: {ruta_final}"))
+            self.root.after(0, lambda: messagebox.showinfo("Éxito", f"Archivo convertido:\n{ruta_final}"))
+        except Exception as e:
+            self.root.after(0, lambda: self.log_conv(f"❌ Error: {str(e)}"))
+            self.root.after(0, lambda: messagebox.showerror("Error", str(e)))
+        finally:
+            self.root.after(0, self.finalizar_conversion)
+
+    def finalizar_conversion(self):
+        self.progreso_conv.stop()
+        self.btn_convertir.config(state=tk.NORMAL)
         
     def seleccionar_directorio(self):
         directorio = filedialog.askdirectory(title="Selecciona la carpeta del proyecto")
