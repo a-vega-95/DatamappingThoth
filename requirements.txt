@@ -1,8 +1,20 @@
-fpdf>=1.7.2
+# DatamappingThoth Pro — Dependencias
+# Instalar: pip install -r requirements.txt
 
-# Dependencias para análisis de datos
-pandas>=1.5.0
-openpyxl>=3.0.0
-pyarrow>=8.0.0
+# ── Generación de documentos ──────────────────
+fpdf>=1.7.2
 pypdf>=3.0.0
+
+# ── Procesamiento de datos ────────────────────
+pandas>=1.5.0
+openpyxl>=3.0.0       # Lectura/escritura de Excel
+pyarrow>=8.0.0         # Soporte Parquet
+
+# ── Imágenes ──────────────────────────────────
 Pillow>=9.0.0
+
+# ── Documentos Word (opcional, para DOCX) ─────
+# python-docx>=0.8.11
+
+# ── Interfaz ──────────────────────────────────
+# tkinter viene con Python estándar (no necesita instalación extra)

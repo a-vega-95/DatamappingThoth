@@ -1,18 +1,24 @@
-# Environment
+# DatamappingThoth Pro — .gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 .venv/
 venv/
 env/
 .env
-
-# Python
-__pycache__/
-*.pyc
-
-
-
-# IDE
+*.egg-info/
+dist/
+build/
 .idea/
 .vscode/
+*.tmp
+*.log
 
-# Project specific
-investigaciones/
+# Archivos generados por la aplicación (opcionales, comentar si se quieren versionar)
+mapa_proyecto.txt
+Codigo_Fuente_Completo.txt
+Codigo_Fuente_Completo.pdf
+mapa_datos.txt
+mapa_datos.pdf
+mapa_datos.csv

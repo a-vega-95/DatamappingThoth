@@ -1,134 +1,350 @@
-A continuación, te presento una estructura de solución completa que cubre tus tres requisitos:
+Este documento define las especificaciones técnicas y funcionales para la reestructuración profesional del software **DatamappingThoth**. El objetivo es consolidar las capacidades actuales de análisis de datos y extracción de código en dos macro-módulos robustos y escalables.
 
-Mapa de directorios: Un archivo mapa_proyecto.txt con la estructura visual del árbol.
+DatamappingThoth/
+├── src/                        # Código fuente principal
+│   ├── main.py                 # Punto de entrada de la aplicación
+│   ├── config/                 # Configuraciones y constantes
+│   │   └── settings.py         # Centraliza extensiones y carpetas ignoradas
+│   ├── core/                   # Motores de procesamiento (Lógica de negocio)
+│   │   ├── analyzer.py         # (Analizador de datos)
+│   │   ├── converter.py        # (Conversor de formatos)
+│   │   └── extractor.py        # (Extractor de código y mapas)
+│   ├── ui/                     # Capa de presentación
+│   │   ├── app.py              # Clase InvestigadorApp y componentes GUI
+│   │   └── styles.py           # Definición de estilos de ttk
+│   └── utils/                  # Funciones de soporte transversales
+│       ├── pdf_utils.py        # Compresión y manejo de PDF
+│       └── file_utils.py       # Detección de tipos de archivo (texto/binario)
+├── tests/                      # Pruebas unitarias e integración
+├── docs/                       # Documentación técnica y manuales
+├── requirements.txt            # Dependencias del proyecto
+└── .gitignore                  # Archivos excluidos de Git
+---
+A continuación, presento una propuesta de reestructuración y la definición de sus módulos actuales y potenciales:1. Propuesta de Arquitectura ProfesionalActualmente, todos los archivos residen en la raíz del proyecto. Una estructura profesional debería separar la lógica de negocio, la interfaz de usuario y las utilidades.PlaintextDatamappingThoth/
+├── src/                        # Código fuente principal
+│   ├── main.py                 # Punto de entrada de la aplicación
+│   ├── config/                 # Configuraciones y constantes
+│   │   └── settings.py         # Centraliza extensiones y carpetas ignoradas
+│   ├── core/                   # Motores de procesamiento (Lógica de negocio)
+│   │   ├── analyzer.py         # (Analizador de datos)
+│   │   ├── converter.py        # (Conversor de formatos)
+│   │   └── extractor.py        # (Extractor de código y mapas)
+│   ├── ui/                     # Capa de presentación
+│   │   ├── app.py              # Clase InvestigadorApp y componentes GUI
+│   │   └── styles.py           # Definición de estilos de ttk
+│   └── utils/                  # Funciones de soporte transversales
+│       ├── pdf_utils.py        # Compresión y manejo de PDF
+│       └── file_utils.py       # Detección de tipos de archivo (texto/binario)
+├── tests/                      # Pruebas unitarias e integración
+├── docs/                       # Documentación técnica y manuales
+├── requirements.txt            # Dependencias del proyecto
+└── .gitignore                  # Archivos excluidos de Git
 
-Reporte de distribución: Un resumen de qué tipos de archivos existen (conteo por extensión).
+[cite_start]Para organizar tu programa **DatamappingThoth** [cite: 205] bajo una arquitectura profesional, dividiremos el desarrollo en los dos macro-módulos solicitados. Esta estructura permite separar la lógica de investigación y auditoría de datos de las herramientas de utilidad de conversión.
 
-Código a PDF: Un archivo PDF consolidado con el contenido de los archivos legibles.
+### **Macro-Módulo 1: Investigador y Mapeador de Proyectos**
 
-1. Prerrequisitos
-Necesitarás instalar una librería para manejar la creación del PDF. Recomiendo FPDF por su simplicidad.
+Este módulo se encarga de la introspección, tanto de la estructura del código como del contenido de los datos.
 
-Bash
-pip install fpdf
-2. El Código (Script en Python)
-Este script escanea recursivamente, filtra archivos binarios (para que no intente imprimir imágenes o ejecutables como texto) y genera los reportes.
+#### **1.1. Extractor de Código Fuente (Auditoría)**
+[cite_start]Actualmente implementado en `extractor.py`[cite: 120], este sub-módulo realiza las siguientes tareas:
+* [cite_start]**Generación del Árbol de Directorios:** Crea una representación visual de la estructura del proyecto (ej: `mapa_proyecto.txt`)[cite: 138, 140, 205].
+* [cite_start]**Consolidación de Código:** Escanea recursivamente archivos con extensiones permitidas (`.py`, `.js`, `.java`, etc.) [cite: 122, 134] [cite_start]y genera un documento consolidado (PDF o TXT) que incluye el nombre del archivo y su código fuente íntegro[cite: 135, 136, 141].
+* [cite_start]**Filtrado Inteligente:** Ignora automáticamente carpetas de entorno virtual (`.venv`, `node_modules`) y archivos binarios para evitar errores de codificación[cite: 121, 126, 158].
 
-Python
+#### **1.2. Mapeador Inteligente de Datos (Data Mapping)**
+[cite_start]Utiliza la lógica de `analizador_datos.py` [cite: 1] [cite_start]para procesar formatos estructurados (XLSX, XLS, XLSM, Parquet, CSV)[cite: 37]:
+* [cite_start]**Detección de Esquema:** Identifica nombres de columnas (names) y tipos de datos (str/dtypes) mediante detección inteligente de encabezados[cite: 6, 11, 19, 28].
+* [cite_start]**Estadísticas de Contenido:** Actualmente el sistema realiza un muestreo de valores únicos[cite: 2, 18, 23]. Para cumplir con tu requerimiento, se debe integrar:
+    * **Head y Tail:** Lectura de las primeras y últimas 5 filas de cada hoja o archivo para el informe final.
+* [cite_start]**Reportes Multiformato:** Genera un mapa detallado del archivo en formato TXT (por defecto) con opción de exportar a un reporte visual en PDF[cite: 42, 43, 45].
+
+---
+
+### **Macro-Módulo 2: Centro de Conversión Universal**
+
+Este módulo funciona como una suite de herramientas de transformación, operando de forma independiente a la estructura del proyecto analizado.
+
+#### **2.1. Conversor de Documentos (Estilo "iLovePDF")**
+[cite_start]Basado en las funciones maestras de `conversor.py`[cite: 110, 118]:
+* [cite_start]**Transformaciones de Texto y PDF:** Conversión bidireccional entre PDF y TXT [cite: 115, 117][cite_start], y de imágenes a PDF[cite: 114].
+* **Funciones Potenciales (A expandir):**
+    * [cite_start]**Unión de PDF:** Implementar una función que utilice `PdfWriter` de la librería `pypdf` [cite: 165, 166] para combinar múltiples archivos en uno solo.
+    * **Soporte DOCX:** Integrar librerías como `python-docx` para permitir la transformación hacia formatos de Microsoft Word.
+
+#### **2.2. Motor de Formatos de Datos (ETL Lite)**
+Módulo especializado en el intercambio de formatos de bases de datos y hojas de cálculo:
+* [cite_start]**XLSX ↔ Parquet:** Implementar conversiones directas usando `pandas` y `pyarrow`[cite: 111, 165]. [cite_start]La lógica actual ya utiliza `chunks` para manejar archivos grandes sin saturar la memoria RAM[cite: 111].
+* [cite_start]**CSV ↔ Excel/JSON:** Conversiones ya funcionales en el código actual que garantizan la integridad de los datos entre formatos planos y estructurados[cite: 111, 113, 119].
+
+---
+
+### **Resumen de Organización de Archivos**
+
+[cite_start]Para que el programa sea profesional, la interfaz gráfica (`app.py`) [cite: 62] [cite_start]debe presentar estas dos macros como pestañas independientes en el `ttk.Notebook`[cite: 64, 65].
+
+
+
+| Ubicación sugerida | Módulo | Función Principal |
+| :--- | :--- | :--- |
+| `src/core/extractor.py` | **Investigador** | [cite_start]Árbol de directorios y consolidación de código[cite: 120, 127]. |
+| `src/core/analyzer.py` | **Mapeador** | [cite_start]Análisis de headers, tipos de datos y muestreo (Head/Tail)[cite: 1, 6]. |
+| `src/core/converter.py` | **Conversor** | [cite_start]Transformación de formatos (PDF, TXT, XLSX, Parquet)[cite: 110, 118]. |
+| `src/ui/app.py` | **GUI** | [cite_start]Interfaz de usuario dividida en pestañas de "Investigador" y "Conversor"[cite: 63, 65]. |
+
+
+Este documento define las especificaciones técnicas y funcionales para la reestructuración profesional del software **DatamappingThoth**. El objetivo es consolidar las capacidades actuales de análisis de datos y extracción de código en dos macro-módulos robustos y escalables.
+
+---
+
+## 1. Objetivo General
+[cite_start]Transformar la herramienta actual en una suite profesional que permita la auditoría de proyectos (extracción de código y mapeo de datos) y la gestión versátil de archivos (conversión y manipulación), manteniendo la eficiencia de memoria mediante procesamiento por bloques (chunks)[cite: 2, 111].
+
+---
+
+## 2. Macro-Módulo 1: Investigador y Mapeador de Proyectos
+Este módulo se enfocará en la introspección técnica de directorios y el análisis profundo de archivos de datos estructurados.
+
+### A. Extractor de Código Fuente (Auditoría)
+* [cite_start]**Mapa de Directorios:** Debe generar una estructura visual del árbol de carpetas y archivos[cite: 127, 138, 187].
+* [cite_start]**Consolidación de Código:** Escaneo recursivo para extraer el contenido de archivos de texto[cite: 127, 135].
+    * [cite_start]**Formatos:** Generación obligatoria en TXT (ideal para análisis de IA) y opcional en PDF[cite: 128, 129, 136, 141].
+    * [cite_start]**Contenido:** Cada sección debe iniciar con el nombre del archivo, seguido de su código fuente íntegro[cite: 136, 137].
+    * [cite_start]**Filtros:** Se deben mantener las listas de exclusión para carpetas como `.git`, `node_modules` y `venv`[cite: 121, 150].
+
+### B. Mapeador de Archivos de Datos (Data Mapping)
+[cite_start]Se requiere una evolución del actual `analizador_datos.py` [cite: 1] para incluir:
+* [cite_start]**Formatos Soportados:** XLSX, XLS, XLSM, Parquet y CSV[cite: 1, 20, 26, 37].
+* **Atributos de Análisis:**
+    * [cite_start]**Names:** Identificación de encabezados mediante puntuación inteligente[cite: 6, 11, 12, 23].
+    * [cite_start]**Str/Dtypes:** Detección de tipos de datos (entero, decimal, fecha, texto)[cite: 33, 34, 35, 36].
+    * [cite_start]**Head & Tail:** Incorporar la extracción de las primeras y últimas 5 filas de cada conjunto de datos (funcionalidad a desarrollar sobre la base de `_procesar_fila_datos`)[cite: 18].
+* [cite_start]**Salida:** Informe técnico detallado guardado en TXT por defecto, con opción de exportación a PDF profesional[cite: 42, 43, 44, 45].
+
+---
+
+## 3. Macro-Módulo 2: Centro de Conversión Universal
+Este módulo operará como una herramienta independiente de gestión de formatos, con una interfaz simplificada.
+
+### A. Conversor de Documentos y PDF
+* [cite_start]**Transformaciones:** Soporte para cambios entre TXT, PDF e imágenes[cite: 114, 116, 117].
+* **Nuevos Requerimientos:**
+    * [cite_start]**Integración DOCX:** Implementar conversión hacia/desde Microsoft Word (actualmente no soportado)[cite: 89, 120].
+    * [cite_start]**Unión de PDF:** Nueva función para combinar múltiples archivos PDF en un único documento, utilizando la lógica de `pypdf` ya presente en el proyecto[cite: 117, 166].
+
+### B. Conversor de Datos (ETL Lite)
+* **Intercambio de Formatos:** Implementar lógica bidireccional para:
+    * [cite_start]XLSX ↔ Parquet (Mejora sobre la base de `analizar_parquet`)[cite: 26, 27].
+    * [cite_start]CSV ↔ XLSX/JSON (Ya funcional mediante `pd.read_csv` y `pd.read_excel`)[cite: 111, 112, 113].
+* [cite_start]**Eficiencia:** Todas las conversiones de datos deben realizarse obligatoriamente mediante `chunksize` para prevenir el desbordamiento de RAM en archivos de gran tamaño[cite: 111, 112].
+
+---
+
+## 4. Cambios en la Arquitectura de Directorios
+[cite_start]Para profesionalizar el código, se debe migrar de una estructura plana [cite: 205] a una modular:
+
+
+
+| Carpeta / Módulo | Archivos Incluidos | Responsabilidad |
+| :--- | :--- | :--- |
+| `src/core/` | `extractor.py`, `analyzer.py`, `converter.py` | [cite_start]Lógica de negocio y procesamiento de datos[cite: 62, 120, 121]. |
+| `src/ui/` | `app.py` | [cite_start]Interfaz gráfica y gestión de hilos de ejecución[cite: 63, 179]. |
+| `src/utils/` | `pdf_utils.py` (anteriormente `utils.py`) | [cite_start]Funciones de soporte como compresión de archivos[cite: 166]. |
+| `config/` | `settings.py` | [cite_start]Centralización de extensiones y carpetas ignoradas[cite: 121, 122]. |
+
+---
+
+## 5. Requerimientos Técnicos y Dependencias
+[cite_start]El sistema requiere las siguientes librerías para asegurar su funcionamiento[cite: 165, 203, 204]:
+
+* **Procesamiento de Datos:** `pandas`, `openpyxl`, `pyarrow`.
+* **Generación de Documentos:** `fpdf`, `pypdf`.
+* **Interfaz y Sistema:** `tkinter`, `Pillow`.
+
+> [cite_start]**Nota de Implementación:** Todas las funciones de exportación a PDF deben integrar automáticamente el módulo de compresión de `utils.py` para optimizar el tamaño del archivo final[cite: 48, 142, 166].
+
+---
+
+Para profesionalizar tu proyecto **DatamappingThoth**, he reorganizado y refactorizado tu código fuente siguiendo la arquitectura de dos macro-módulos (Investigador/Mapeador y Conversor Universal). [cite_start]Esta estructura separa la lógica de negocio de la interfaz y centraliza la configuración[cite: 121, 127, 145].
+
+A continuación, se presentan los archivos según la nueva jerarquía de carpetas:
+
+### 1. Configuración Centralizada
+**Archivo:** `config/settings.py`
+[cite_start]Este archivo centraliza las reglas de exclusión y extensiones soportadas para evitar duplicidad de datos en el código[cite: 121, 150].
+
+```python
+# [cite_start]Extensiones y carpetas a ignorar en escaneos de código [cite: 121, 151]
+EXTENSIONES_IGNORADAS = {'.exe', '.dll', '.png', '.jpg', '.jpeg', '.pyc', '.git', '.zip', '.pdf', '.ico'}
+CARPETAS_IGNORADAS = {'.git', 'pycache', 'node_modules', 'venv', '.idea', '.vscode', 'env', 'dist', 'build'}
+
+# [cite_start]Extensiones de código fuente permitidas para consolidación [cite: 122, 184]
+EXTENSIONES_CODIGO = {
+    '.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.c', '.cpp', '.h', '.cs', 
+    '.html', '.css', '.json', '.xml', '.yaml', '.sh', '.md', '.txt', '.gitignore'
+}
+
+# [cite_start]Extensiones para el Mapeador de Datos [cite: 38, 170]
+EXTENSIONES_DATOS = {'.csv', '.xlsx', '.xls', '.xlsm', '.parquet', '.pq'}
+```
+
+---
+
+### 2. Macro-Módulo 1: Investigador (Extractor y Mapeador)
+**Archivo:** `src/core/extractor.py`
+[cite_start]Encargado de generar el árbol de directorios y consolidar el código fuente en un solo documento[cite: 121, 128].
+
+```python
 import os
 from fpdf import FPDF
-
-# CONFIGURACIÓN
-DIRECTORIO_RAIZ = "./tu_proyecto"  # Cambia esto a la ruta de tu proyecto
-NOMBRE_PDF = "Codigo_Fuente_Completo.pdf"
-NOMBRE_MAPA = "mapa_proyecto.txt"
-EXTENSIONES_IGNORADAS = {'.exe', '.dll', '.png', '.jpg', '.jpeg', '.pyc', '.git', '.zip', '.pdf'}
-CARPETAS_IGNORADAS = {'.git', '__pycache__', 'node_modules', 'venv', '.idea', '.vscode'}
+from config.settings import EXTENSIONES_IGNORADAS, CARPETAS_IGNORADAS, EXTENSIONES_CODIGO
 
 class PDFGenerator(FPDF):
     def header(self):
         self.set_font('Arial', 'B', 10)
-        self.cell(0, 10, 'Documentación de Código Fuente', 0, 1, 'C')
+        [cite_start]self.cell(0, 10, 'Consolidado de Código Fuente', 0, 1, 'C') [cite: 123]
 
-    def chapter_title(self, title):
-        self.set_font('Arial', 'B', 12)
-        self.set_fill_color(200, 220, 255)
-        self.cell(0, 10, title, 0, 1, 'L', 1)
-        self.ln(4)
-
-    def chapter_body(self, body):
-        self.set_font('Courier', '', 8) # Courier es monoespaciada, ideal para código
-        self.multi_cell(0, 5, body)
-        self.ln()
-
-def es_archivo_texto(ruta_archivo):
-    """Intenta leer el archivo para ver si es texto o binario"""
-    try:
-        with open(ruta_archivo, 'r', encoding='utf-8') as f:
-            f.read(1024)
-        return True
-    except (UnicodeDecodeError, PermissionError):
-        return False
-
-def generar_arbol_y_extraer(ruta_raiz):
-    pdf = PDFGenerator()
-    pdf.add_page()
-    
+def generar_auditoria_codigo(ruta_raiz, modo='txt'):
+    [cite_start]"""Genera árbol y consolidado de código [cite: 128, 129]"""
     estructura_arbol = []
-    conteo_formatos = {}
-    archivos_procesados = 0
+    contenido_consolidado = []
     
-    print(f"Iniciando escaneo en: {ruta_raiz}...\n")
-
     for root, dirs, files in os.walk(ruta_raiz):
-        # Filtrar carpetas ignoradas
-        dirs[:] = [d for d in dirs if d not in CARPETAS_IGNORADAS]
-        
-        # Nivel de indentación para el mapa visual
-        level = root.replace(ruta_raiz, '').count(os.sep)
-        indent = ' ' * 4 * (level)
-        nombre_carpeta = os.path.basename(root)
-        if nombre_carpeta == '': nombre_carpeta = ruta_raiz
-        
-        estructura_arbol.append(f"{indent}[DIR] {nombre_carpeta}/")
-        subindent = ' ' * 4 * (level + 1)
+        [cite_start]dirs[:] = [d for d in dirs if d not in CARPETAS_IGNORADAS] [cite: 131]
+        rel_path = os.path.relpath(root, ruta_raiz)
+        level = 0 if rel_path == '.' else rel_path.count(os.sep) + 1
+        [cite_start]estructura_arbol.append(f"{'  ' * level}[DIR] {os.path.basename(root)}/") [cite: 133]
         
         for f in files:
-            ruta_completa = os.path.join(root, f)
             ext = os.path.splitext(f)[1].lower()
+            [cite_start]estructura_arbol.append(f"{'  ' * (level + 1)}|-- {f}") [cite: 134]
             
-            # 1. Actualizar Mapa
-            estructura_arbol.append(f"{subindent}|-- {f}")
-            
-            # 2. Actualizar Estadísticas
-            conteo_formatos[ext] = conteo_formatos.get(ext, 0) + 1
-            
-            # 3. Procesar PDF (Solo si no está ignorado y es texto)
-            if ext not in EXTENSIONES_IGNORADAS and es_archivo_texto(ruta_completa):
+            if ext in EXTENSIONES_CODIGO:
                 try:
-                    with open(ruta_completa, 'r', encoding='utf-8', errors='replace') as codigo:
-                        contenido = codigo.read()
-                        
-                        # Agregar al PDF
-                        pdf.chapter_title(f"Archivo: {os.path.relpath(ruta_completa, ruta_raiz)}")
-                        pdf.chapter_body(contenido)
-                        archivos_procesados += 1
+                    with open(os.path.join(root, f), 'r', encoding='utf-8', errors='replace') as c:
+                        # [cite_start]Requerimiento: Nombre del archivo + Código íntegro [cite: 136]
+                        contenido_consolidado.append(f"\n{'='*60}\nARCHIVO: {f}\n{'='*60}\n")
+                        contenido_consolidado.append(c.read())
                 except Exception as e:
-                    print(f"Error leyendo {f}: {e}")
+                    [cite_start]print(f"Error en {f}: {e}") [cite: 137]
+    return estructura_arbol, contenido_consolidado
+```
 
-    # GUARDAR MAPA TXT
-    with open(NOMBRE_MAPA, 'w', encoding='utf-8') as f:
-        f.write("=== ESTRUCTURA DE DIRECTORIOS ===\n\n")
-        f.write('\n'.join(estructura_arbol))
-        f.write("\n\n=== DISTRIBUCIÓN DE ARCHIVOS ===\n")
-        for ext, count in sorted(conteo_formatos.items()):
-            f.write(f"Formato {ext if ext else 'Sin ext'}: {count} archivos\n")
-            
-    # GUARDAR PDF
+**Archivo:** `src/core/analyzer.py`
+[cite_start]Evolución del mapeador para incluir **Head**, **Tail** y tipos de datos[cite: 14, 28].
+
+```python
+import pandas as pd
+import os
+
+def mapear_archivo_datos(ruta):
+    [cite_start]"""Mapeo profesional: Names, Str (Dtypes), Head y Tail [cite: 14, 111]"""
+    ext = os.path.splitext(ruta)[1].lower()
     try:
-        pdf.output(NOMBRE_PDF)
-        print(f"\n¡Éxito! Procesados {archivos_procesados} archivos de código.")
-        print(f"Generados: {NOMBRE_PDF} y {NOMBRE_MAPA}")
+        if ext == '.csv': df = pd.read_csv(ruta, nrows=1000)
+        elif ext in ['.xlsx', '.xls', '.xlsm']: df = pd.read_excel(ruta)
+        elif ext in ['.parquet', '.pq']: df = pd.read_parquet(ruta)
+        
+        info = {
+            [cite_start]"columnas": list(df.columns), # Names [cite: 28]
+            [cite_start]"tipos": df.dtypes.to_dict(), # Str/Dtypes [cite: 178]
+            "head": df.head(5).to_string(), # Head [Requerimiento nuevo]
+            "tail": df.tail(5).to_string()  # Tail [Requerimiento nuevo]
+        }
+        return info
     except Exception as e:
-        print(f"Error guardando PDF (quizás está abierto?): {e}")
+        return {"error": str(e)}
+```
 
-if __name__ == "__main__":
-    # Puedes cambiar '.' por la ruta absoluta de la carpeta que quieres escanear
-    generar_arbol_y_extraer(DIRECTORIO_RAIZ)
-Características Clave de esta Solución:
-Detección de Binarios: La función es_archivo_texto es crítica. Evita que el programa se rompa intentando convertir un .png o un .exe a texto dentro del PDF.
+---
 
-Fuente Monoespaciada: Utiliza la fuente Courier en el PDF. Esto es vital para que la indentación del código (Python, JS, C++, etc.) se mantenga legible.
+### 3. Macro-Módulo 2: Conversor Universal
+**Archivo:** `src/core/converter.py`
+[cite_start]Incluye las funciones de conversión estilo "iLovePDF" y el intercambio de formatos de datos[cite: 111, 118].
 
-Codificación utf-8: El script maneja errors='replace', lo que significa que si encuentra un carácter extraño en un archivo de código, pondrá un símbolo de reemplazo en lugar de detener todo el proceso.
+```python
+import pandas as pd
+from pypdf import PdfWriter, PdfReader
+import os
 
-Filtros de Seguridad: He incluido listas para ignorar carpetas como node_modules o .git, ya que suelen contener miles de archivos que harían el PDF inmanejable.
+def unir_pdfs(lista_rutas, ruta_salida):
+    """Nueva función: Unir múltiples PDF en uno solo [Requerimiento nuevo]"""
+    merger = PdfWriter()
+    for pdf in lista_rutas:
+        merger.append(pdf)
+    merger.write(ruta_salida)
+    merger.close()
 
-¿Cómo usarlo?
-Copia el código en un archivo llamado extractor.py.
+def transformar_datos(ruta_origen, formato_destino):
+    [cite_start]"""Conversión eficiente XLSX <-> Parquet [cite: 111, 112]"""
+    df = pd.read_excel(ruta_origen) if 'xls' in ruta_origen else pd.read_csv(ruta_origen)
+    nombre_base = os.path.splitext(ruta_origen)[0]
+    
+    if formato_destino == 'parquet':
+        [cite_start]df.to_parquet(f"{nombre_base}.parquet") [cite: 27]
+    elif formato_destino == 'xlsx':
+        [cite_start]df.to_excel(f"{nombre_base}.xlsx", index=False) [cite: 112]
+```
 
-Coloca el archivo en la carpeta raíz de tu proyecto (o edita la variable DIRECTORIO_RAIZ).
+---
 
-Ejecútalo con python extractor.py.
+### 4. Interfaz Gráfica (GUI)
+**Archivo:** `src/ui/app.py`
+[cite_start]Organiza los dos macro-módulos en pestañas (`Notebook`) diferenciadas[cite: 63, 65, 81].
 
-¿Te gustaría que agreguemos resaltado de sintaxis (colores) al PDF para que el código sea más fácil de leer, o prefieres mantenerlo en blanco y negro para impresión simple?
+```python
+import tkinter as tk
+from tkinter import ttk
+from src.core.extractor import generar_auditoria_codigo
+from src.core.converter import transformar_datos
+
+class DatamappingApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("DatamappingThoth Pro")
+        [cite_start]self.root.geometry("800x600") [cite: 63, 179]
+        
+        self.tabs = ttk.Notebook(self.root)
+        [cite_start]self.tabs.pack(fill='both', expand=True) [cite: 65]
+        
+        # Pestaña 1: Investigador & Mapper
+        self.tab_inv = ttk.Frame(self.tabs)
+        [cite_start]self.tabs.add(self.tab_inv, text="Investigador de Proyectos") [cite: 66]
+        self.setup_investigador()
+        
+        # Pestaña 2: Conversor Universal
+        self.tab_conv = ttk.Frame(self.tabs)
+        [cite_start]self.tabs.add(self.tab_conv, text="Centro de Conversión") [cite: 81]
+        self.setup_conversor()
+
+    def setup_investigador(self):
+        # [cite_start]UI para árbol de directorios y mapping de datos [cite: 67, 76]
+        ttk.Label(self.tab_inv, text="Auditoría de Proyecto").pack(pady=10)
+        ttk.Button(self.tab_inv, text="Generar Mapping Completo").pack()
+
+    def setup_conversor(self):
+        # [cite_start]UI para cambios de formato y unión de archivos [cite: 82, 84]
+        ttk.Label(self.tab_conv, text="Conversor de Formatos").pack(pady=10)
+        ttk.Button(self.tab_conv, text="Unir PDFs").pack()
+```
+
+### 5. Utilidades y PDF
+**Archivo:** `src/utils/pdf_utils.py`
+[cite_start]Basado en tu archivo `utils.py`, optimizado para compresión[cite: 166].
+
+```python
+from pypdf import PdfWriter, PdfReader
+import os
+
+def compress_pdf(input_path):
+    [cite_start]"""Comprime el PDF final para ahorrar espacio [cite: 166, 167]"""
+    reader = PdfReader(input_path)
+    writer = PdfWriter()
+    for page in reader.pages:
+        [cite_start]page.compress_content_streams() [cite: 168]
+        writer.add_page(page)
+    with open(input_path, "wb") as f:
+        writer.write(f)
+    return input_path
+```
+
